@@ -335,7 +335,9 @@ possibly nested parts. A body with zero parts is permitted when
 deleting or unliking. External body parts (#external) are also supported.
 When there is a single (inline) part or a (single) externally reference
 part, its IANA media type, subtype, and parameters are included in the
-contentType field {8}. 
+contentType field {8}. Additionally, attachment-like bodies (#external or inline)
+support a optional `RenderHint` field (#renderhints) to hint metadata as to how presentation
+should be done, including but not limited to accessibility concerns for media.
 
 ``` cddl
 NestedPart = [
@@ -349,7 +351,8 @@ NullPart = ( cardinality: nullpart )
 SinglePart = (
     cardinality: single,
     contentType: tstr,        ; {8}
-    content: bstr
+    content: bstr,
+    ? renderHints: RenderHints
 )
 
 ExternalPart = (
@@ -365,7 +368,8 @@ ExternalPart = (
     hashAlg: uint .size 1,
     contentHash: bstr,
     description: tstr,
-    filename: tstr
+    filename: tstr,
+    ? renderHints: RenderHints
 )
 
 MultiPart = (
@@ -373,6 +377,13 @@ MultiPart = (
     partSemantics: chooseOne / singleUnit / processAll,
     parts: [2* NestedPart]
 )
+
+RenderHints = [
+    altText: null / tstr,    ; Missing media / accessibility text
+    width: uint .size 2,     ; in pixels - can be set to 0 for "auto"
+    height: uint .size 2,    ; in pixels - can be set to 0 for "auto"
+    duration: uint .size 4   ; duration in seconds for GIFs/videos, can be set to 0
+]
 
 ; cardinality
 nullpart = 0
@@ -524,6 +535,33 @@ fields are zero length.
 
 Implementations of this specification MUST implement the AES-128-GCM
 algorithm.
+
+## Render Hints {#renderhints}
+
+For attachments (found either in `SinglePart` or `ExternalPart` - #external)
+categorized as media (i.e. holding a `contentType` such as `image/*` or `video/*`),
+the description of the content can also include a `RenderHints` structure, describing
+meta-information as to how to present this media. It is at the consumers' discretion
+to uphold or ignore those hints.
+
+``` cddl
+RenderHints = [
+    altText: null / tstr,    ; Missing media / accessibility text
+    width: uint .size 2,     ; in pixels - can be set to 0 for "auto"
+    height: uint .size 2,    ; in pixels - can be set to 0 for "auto"
+    duration: uint .size 4   ; duration in seconds for GIFs/videos, can be set to 0
+]
+```
+
+The `altText` field serves the same purpose as the W3C `alt` / `aria-label` attribute;
+In case the image URL leads to a dead link or the presentation is using a screen reader,
+this field can be used to feed legible data into the accessibility capabilities of the
+platform. Please note that while the `description` field of `ExternalPart` can be used
+for a similar purpose, this is specifically targeted at conveying context to assistive
+technologies.
+
+The `width`, `height` and `duration` attributes are used *before* the media is
+downloaded and can help ensure a consistent presentation of media.
 
 ## Derived Data Values
 

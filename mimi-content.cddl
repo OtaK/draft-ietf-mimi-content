@@ -21,7 +21,8 @@ NullPart = ( cardinality: nullpart )
 SinglePart = (
     cardinality: single,
     contentType: tstr,
-    content: bstr
+    content: bstr,
+    ? renderHints: RenderHints
 )
 
 ExternalPart = (
@@ -37,7 +38,8 @@ ExternalPart = (
     hashAlg: uint .size 1,
     contentHash: bstr,
     description: tstr,
-    filename: tstr
+    filename: tstr,
+    ? renderHints: RenderHints
 )
 
 MultiPart = (
@@ -49,6 +51,13 @@ MultiPart = (
 Expiration = [
     relative: bool,
     time: uint .size 4
+]
+
+RenderHints = [
+    altText: null / tstr,    ; Missing media / accessibility text
+    width: uint .size 2,     ; in pixels - can be set to 0 for "auto"
+    height: uint .size 2,    ; in pixels - can be set to 0 for "auto"
+    duration: uint .size 4   ; duration in seconds for GIFs/videos, can be set to 0
 ]
 
 baseDispos = &(
