@@ -7,29 +7,29 @@ content := $(filter-out report.cbor implied-original.cbor,$(cbor))
 
 all: $(targets)
 
-#%.diag: %.edn
-#	edn-abnf -t diag $< > $@
+%.diag: %.edn
+	gem exec --conservative edn-abnf -t diag $< > $@
 
 %.cbor: %.diag
-	diag2cbor.rb $< > $@
+	gem exec --conservative -g cbor-diag diag2cbor.rb $< > $@
 
 %.pretty: %.diag
-	diag2pretty.rb $< > $@
+	gem exec --conservative -g cbor-diag diag2pretty.rb $< > $@
 
 validate-all: validate-content validate-report validate-implied
 
 validate-content: $(content)
-	cddl-rs compile-cddl --cddl ../mimi-content.cddl
-	for c in $(content); do cddl ../mimi-content.cddl validate $${c}; done
+	cddl compile-cddl --cddl ../mimi-content.cddl
+	for c in $(content); do gem exec --conservative cddl ../mimi-content.cddl validate $${c}; done
 
 validate-report: report.cbor
-	cddl-rs compile-cddl --cddl ../delivery-report.cddl
-	cddl ../delivery-report.cddl validate report.cbor
+	cddl compile-cddl --cddl ../delivery-report.cddl
+	gem exec --conservative cddl ../delivery-report.cddl validate report.cbor
 	#cddl-rs validate -d ../delivery-report.cddl -c report.cbor
 
 validate-implied: implied-original.cbor
-	cddl-rs compile-cddl --cddl ../implied.cddl
-	cddl ../implied.cddl validate implied-original.cbor
+	cddl compile-cddl --cddl ../implied.cddl
+	gem exec --conservative cddl ../implied.cddl validate implied-original.cbor
 	#cddl-rs validate -d ../implied.cddl -c implied-original.cbor
 
 help:
@@ -38,7 +38,7 @@ help:
 	@echo '  (sudo) gem install edn-abnf'
 	@echo '  (sudo) gem install cddl'
 	@echo '  cargo install cddl'
-	@echo '2. Then fix your paths (especially on a Mac)'
+	@echo '2. Fix your paths if needed (especially on a Mac)'
 	@echo '3. Profit'
 
 .SUFFIXES:
